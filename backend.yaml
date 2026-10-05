@@ -13,8 +13,6 @@ spec:
       labels:
         app: backend
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: controlplane
       containers:
         - name: backend
           image: ims-zeotap-backend:latest
@@ -24,12 +22,22 @@ spec:
           envFrom:
             - secretRef:
                 name: ims-secret
+          startupProbe:
+            httpGet: { path: /health, port: 8000 }
+            timeoutSeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
           readinessProbe:
-            httpGet:
-              path: /api/incidents
-              port: 8000
-            initialDelaySeconds: 15
+            httpGet: { path: /health, port: 8000 }
+            timeoutSeconds: 5
             periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            timeoutSeconds: 5
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 384Mi }
 ---
 apiVersion: v1
 kind: Service
